@@ -1,0 +1,17 @@
+[
+  {
+    "id": "claim_ext_01",
+    "test_focus": "basic_coref_and_triplet",
+    "raw_draft": "Gustave Eiffel was a French civil engineer. He designed the Eiffel Tower, which is located in Paris. He also built the internal frame for the Statue of Liberty."
+  },
+  {
+    "id": "claim_ext_02",
+    "test_focus": "complex_sentences_and_multiple_entities",
+    "raw_draft": "OpenAI released GPT-4 in 2023, and it immediately revolutionized the tech industry. Sam Altman, the CEO, stated that they are constantly improving its safety protocols. Microsoft invested heavily in the company because they believe in its potential."
+  },
+  {
+    "id": "claim_ext_03",
+    "test_focus": "nested_clauses_and_ambiguous_pronouns",
+    "raw_draft": "The Mitochondrion is known as the powerhouse of the cell because it generates most of the cell's supply of ATP. Biologists study it extensively. They found that its dysfunction can lead to severe metabolic diseases."
+  }
+]

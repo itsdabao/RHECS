@@ -1,0 +1,14 @@
+[
+    {
+        "id": "test_01_basic_coref",
+        "draft_response": "Trường Đại học Công nghệ Thông tin (UIT) là một trường đại học trọng điểm. Nó tọa lạc tại khu đô thị Đại học Quốc gia. Sinh viên đánh giá cao môi trường ở đây vì họ được tham gia nhiều dự án AI thực tế."
+    },
+    {
+        "id": "test_02_multiple_entities",
+        "draft_response": "OpenAI vừa phát hành GPT-4, trong khi Google ra mắt Gemini. Họ tuyên bố rằng nó có khả năng xử lý ngữ cảnh cực kỳ xuất sắc. Tuy nhiên, giới chuyên gia vẫn lo ngại về tính an toàn."
+    },
+    {
+        "id": "test_03_unresolved_ambiguity",
+        "draft_response": "Hệ thống RAG bị sập vào tối hôm qua do quá tải request. Anh ấy đã cố gắng khởi động lại nó nhưng hoàn toàn vô ích."
+    }
+]
