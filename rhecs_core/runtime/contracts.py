@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 
 def _utc_now_iso() -> str:
@@ -39,6 +39,17 @@ class RuntimeErrorType(str, Enum):
     UNKNOWN_ERROR = "unknown_error"
 
 
+class VerificationStrategy(str, Enum):
+    DIRECT_LLM = "direct_llm"
+    RLM_RECURSIVE = "rlm_recursive"
+
+
+class RuntimeEventType(str, Enum):
+    RLM_SUBCALL_STARTED = "RLM_SUBCALL_STARTED"
+    RLM_SUBCALL_FINISHED = "RLM_SUBCALL_FINISHED"
+    RLM_SUBCALL_FAILED = "RLM_SUBCALL_FAILED"
+
+
 @dataclass
 class RuntimeTransition:
     entity_type: str
@@ -47,6 +58,8 @@ class RuntimeTransition:
     to_state: str
     stage: str
     reason: Optional[str] = None
+    event_type: Optional[RuntimeEventType] = None
+    payload: Optional[dict[str, Any]] = None
     timestamp: str = field(default_factory=_utc_now_iso)
 
 

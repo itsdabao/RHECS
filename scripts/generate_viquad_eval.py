@@ -14,7 +14,6 @@ from google import genai
 from pydantic import BaseModel, ValidationError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-
 DEFAULT_MODEL_CANDIDATES = [
     "gemini-3.1-flash-lite-preview",
     "gemini-2.5-flash-lite",
@@ -45,13 +44,15 @@ class Candidate:
 class PoisonResult(BaseModel):
     draft_text: str
     fault_span: Optional[str] = None
-    error_category: Optional[Literal[
-        "ENTITY_ERROR",
-        "RELATION_ERROR",
-        "CONTRADICTORY",
-        "UNVERIFIABLE",
-        "FABRICATED",
-    ]] = None
+    error_category: Optional[
+        Literal[
+            "ENTITY_ERROR",
+            "RELATION_ERROR",
+            "CONTRADICTORY",
+            "UNVERIFIABLE",
+            "FABRICATED",
+        ]
+    ] = None
 
 
 @dataclass
@@ -65,7 +66,9 @@ class ModelFallbackError(RuntimeError):
     def __init__(self, model_errors: dict[str, Exception]):
         self.model_errors = model_errors
         last_model = list(model_errors.keys())[-1] if model_errors else "unknown"
-        last_error = model_errors[last_model] if model_errors else RuntimeError("Unknown")
+        last_error = (
+            model_errors[last_model] if model_errors else RuntimeError("Unknown")
+        )
         super().__init__(
             f"Tất cả model fallback đều thất bại. Model cuối: {last_model}. Lỗi: {_short_error(last_error)}"
         )
@@ -101,8 +104,12 @@ def parse_args() -> argparse.Namespace:
         default=200,
         help="Keep only contexts with at most this many words",
     )
-    parser.add_argument("--n-clean", type=int, default=50, help="Number of clean samples")
-    parser.add_argument("--n-error", type=int, default=100, help="Number of hallucinated samples")
+    parser.add_argument(
+        "--n-clean", type=int, default=50, help="Number of clean samples"
+    )
+    parser.add_argument(
+        "--n-error", type=int, default=100, help="Number of hallucinated samples"
+    )
     parser.add_argument(
         "--error-categories",
         default=",".join(HALLUCINATION_CATEGORIES),
@@ -137,7 +144,9 @@ def pick_first_non_empty_answer(answer_list: list[dict]) -> Optional[str]:
     return None
 
 
-def extract_candidates(dataset: dict, max_context_words: int) -> tuple[list[Candidate], list[Candidate]]:
+def extract_candidates(
+    dataset: dict, max_context_words: int
+) -> tuple[list[Candidate], list[Candidate]]:
     clean_candidates: list[Candidate] = []
     error_candidates: list[Candidate] = []
 
@@ -203,14 +212,20 @@ def sample_candidates(
     take_error = min(n_error, len(error_pool))
 
     if take_clean < n_clean:
-        print(f"[CẢNH BÁO] Yêu cầu {n_clean} mẫu chuẩn, nhưng chỉ có {take_clean} mẫu khả dụng.")
+        print(
+            f"[CẢNH BÁO] Yêu cầu {n_clean} mẫu chuẩn, nhưng chỉ có {take_clean} mẫu khả dụng."
+        )
     if take_error < n_error:
-        print(f"[CẢNH BÁO] Yêu cầu {n_error} mẫu lỗi, nhưng chỉ có {take_error} mẫu khả dụng.")
+        print(
+            f"[CẢNH BÁO] Yêu cầu {n_error} mẫu lỗi, nhưng chỉ có {take_error} mẫu khả dụng."
+        )
 
     sampled_clean = rng.sample(clean_pool, take_clean)
 
     sampled_error = rng.sample(error_pool, take_error)
-    category_counts = {category: take_error // len(error_categories) for category in error_categories}
+    category_counts = {
+        category: take_error // len(error_categories) for category in error_categories
+    }
     for i in range(take_error % len(error_categories)):
         category_counts[error_categories[i]] += 1
 
@@ -241,9 +256,9 @@ def sample_candidates(
 
 
 def build_prompt(candidate: Candidate) -> str:
-        if candidate.is_hallucinated:
-                target_category = candidate.target_category or "ENTITY_ERROR"
-                return f"""
+    if candidate.is_hallucinated:
+        target_category = candidate.target_category or "ENTITY_ERROR"
+        return f"""
 Bạn là một chuyên gia tạo dữ liệu đánh giá hallucination cho hệ thống NLP.
 
 Nhiệm vụ:
@@ -278,7 +293,7 @@ Ràng buộc:
 {candidate.answer}
 """.strip()
 
-        return f"""
+    return f"""
 Bạn là một chuyên gia tạo dữ liệu đánh giá factual consistency.
 
 Nhiệm vụ:
@@ -341,7 +356,9 @@ def get_model_candidates(primary_model: str, model_candidates_arg: str) -> list[
     models: list[str] = [primary_model]
     models.extend(_parse_csv_models(model_candidates_arg))
 
-    env_models = os.getenv("GEMINI_MODEL_CANDIDATES") or os.getenv("GOOGLE_MODEL_CANDIDATES")
+    env_models = os.getenv("GEMINI_MODEL_CANDIDATES") or os.getenv(
+        "GOOGLE_MODEL_CANDIDATES"
+    )
     models.extend(_parse_csv_models(env_models or ""))
 
     models.extend(DEFAULT_MODEL_CANDIDATES)
@@ -383,7 +400,9 @@ def _extract_retry_delay_seconds(exc: Exception) -> int:
     if match:
         return int(match.group(1))
 
-    match = re.search(r"retry in\s+([0-9]+(?:\.[0-9]+)?)s", message, flags=re.IGNORECASE)
+    match = re.search(
+        r"retry in\s+([0-9]+(?:\.[0-9]+)?)s", message, flags=re.IGNORECASE
+    )
     if match:
         return int(float(match.group(1)))
 
@@ -407,7 +426,9 @@ def _should_retry_exception(exc: Exception) -> bool:
     wait=wait_exponential(multiplier=1, min=2, max=30),
     reraise=True,
 )
-async def call_gemini(client: genai.Client, model_candidates: list[str], candidate: Candidate) -> PoisonResult:
+async def call_gemini(
+    client: genai.Client, model_candidates: list[str], candidate: Candidate
+) -> PoisonResult:
     prompt = build_prompt(candidate)
 
     model_errors: dict[str, Exception] = {}
@@ -437,7 +458,9 @@ async def call_gemini(client: genai.Client, model_candidates: list[str], candida
     try:
         result = PoisonResult.model_validate_json(response.text)
     except ValidationError as exc:
-        raise ValueError(f"JSON trả về từ model không đúng schema: {response.text}") from exc
+        raise ValueError(
+            f"JSON trả về từ model không đúng schema: {response.text}"
+        ) from exc
 
     draft_text = (result.draft_text or "").strip()
     if not draft_text:
@@ -448,7 +471,10 @@ async def call_gemini(client: genai.Client, model_candidates: list[str], candida
             raise ValueError("Mẫu hallucinated thiếu fault_span")
         if result.error_category not in HALLUCINATION_CATEGORIES:
             raise ValueError("Mẫu hallucinated thiếu error_category hợp lệ")
-        if candidate.target_category and result.error_category != candidate.target_category:
+        if (
+            candidate.target_category
+            and result.error_category != candidate.target_category
+        ):
             raise ValueError(
                 f"Model trả về sai category. Yêu cầu: {candidate.target_category}, nhận: {result.error_category}"
             )
@@ -469,6 +495,7 @@ async def process_candidate(
     candidate: Candidate,
 ) -> dict:
     async with semaphore:
+
         async def pick_available_models() -> list[str]:
             now = time.time()
             async with runtime_state.lock:
@@ -495,7 +522,9 @@ async def process_candidate(
                         runtime_state.disabled_models.add(name)
                     elif _is_fallback_error(model_exc):
                         delay_seconds = _extract_retry_delay_seconds(model_exc)
-                        runtime_state.cooldown_until[name] = time.time() + max(delay_seconds, 3)
+                        runtime_state.cooldown_until[name] = time.time() + max(
+                            delay_seconds, 3
+                        )
             raise
         except Exception as exc:
             if _is_fallback_error(exc):
@@ -505,7 +534,9 @@ async def process_candidate(
                         if _is_daily_quota_error(exc):
                             runtime_state.disabled_models.add(name)
                         else:
-                            runtime_state.cooldown_until[name] = time.time() + max(delay_seconds, 3)
+                            runtime_state.cooldown_until[name] = time.time() + max(
+                                delay_seconds, 3
+                            )
             raise
 
         return {
@@ -570,7 +601,9 @@ async def main_async(args: argparse.Namespace) -> None:
     )
 
     tasks = [
-        asyncio.create_task(process_candidate(client, model_candidates, runtime_state, semaphore, item))
+        asyncio.create_task(
+            process_candidate(client, model_candidates, runtime_state, semaphore, item)
+        )
         for item in selected
     ]
 

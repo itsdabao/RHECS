@@ -25,7 +25,10 @@ class TrajectoryLogger:
     def _write_line(self, payload: dict) -> None:
         try:
             with open(self.file_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(self._to_serializable(payload), ensure_ascii=False) + "\n")
+                f.write(
+                    json.dumps(self._to_serializable(payload), ensure_ascii=False)
+                    + "\n"
+                )
         except Exception:
             # Logging must never break pipeline execution.
             pass

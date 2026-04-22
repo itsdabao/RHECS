@@ -6,12 +6,16 @@
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+dist/
+build/
 .pytest_cache/
 .venv/
 venv/
 
 # Editor and local caches
 .vscode/
+.idea/
 .planning/
 
 # Runtime outputs
@@ -24,13 +28,11 @@ data/eval_summary*.json
 data/eval_confusion_matrix*.json
 data/eval_failures*.jsonl
 
-# Local temporary scripts
-temp_test.py
-temp2_test.py
-test.py
-
 # Reference repo kept local only
 rlm/
 
 # Local document copy
 2512.24601v2.pdf
+
+# Slide guide (local reference)
+RLM_PAPER_REPO_SLIDE_GUIDE.md

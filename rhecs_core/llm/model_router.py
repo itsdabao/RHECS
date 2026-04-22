@@ -1,13 +1,30 @@
 import os
 from typing import Iterable, List, Optional
 
-
 DEFAULT_MODEL_CANDIDATES = [
     "gemini-3-flash",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-flash-latest",
 ]
+
+
+def _has_nonempty_system_instruction(config) -> bool:
+    system_instruction = getattr(config, "system_instruction", None)
+    if system_instruction is None:
+        return False
+    if isinstance(system_instruction, str):
+        return bool(system_instruction.strip())
+    if isinstance(system_instruction, list):
+        return any(str(part).strip() for part in system_instruction)
+    return True
+
+
+def _assert_system_instruction(config) -> None:
+    if not _has_nonempty_system_instruction(config):
+        raise ValueError(
+            "GenerateContentConfig.system_instruction must be provided and non-empty before API call."
+        )
 
 
 def _dedupe_keep_order(items: Iterable[str]) -> List[str]:
@@ -68,6 +85,7 @@ def generate_content_with_fallback(
     model_candidates: Optional[Iterable[str]] = None,
     env_var: Optional[str] = None,
 ):
+    _assert_system_instruction(config)
     candidates = get_model_candidates(model_candidates, env_var=env_var)
     last_exc: Optional[Exception] = None
 
@@ -97,6 +115,7 @@ async def generate_content_with_fallback_async(
     model_candidates: Optional[Iterable[str]] = None,
     env_var: Optional[str] = None,
 ):
+    _assert_system_instruction(config)
     candidates = get_model_candidates(model_candidates, env_var=env_var)
     last_exc: Optional[Exception] = None
 

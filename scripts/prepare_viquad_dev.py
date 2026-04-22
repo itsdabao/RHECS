@@ -71,7 +71,9 @@ def convert_split(dataset_name: str, split: str, max_rows: int = 0) -> dict[str,
     if max_rows > 0:
         ds = ds.select(range(min(max_rows, len(ds))))
 
-    grouped: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    grouped: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
 
     for idx, row in enumerate(ds):
         title = str(row.get("title", "") or "untitled")
@@ -123,7 +125,11 @@ def main() -> None:
         json.dump(converted, f, ensure_ascii=False)
 
     paragraph_count = sum(len(article["paragraphs"]) for article in converted["data"])
-    qa_count = sum(len(paragraph["qas"]) for article in converted["data"] for paragraph in article["paragraphs"])
+    qa_count = sum(
+        len(paragraph["qas"])
+        for article in converted["data"]
+        for paragraph in article["paragraphs"]
+    )
 
     print(f"[HOÀN TẤT] Đã ghi file: {output_path}")
     print(f"[THỐNG KÊ] Số article: {len(converted['data'])}")
